@@ -13,13 +13,13 @@ import numpy as np
 from utils import *
 np.set_printoptions(threshold=np.inf)
 
-# DATA_F107 = GetCANADA(sdt_g, edt_g)
-
 logging.basicConfig(filename = 'SRH_10_7_data.log',  filemode='w', level = logging.INFO, format = '%(asctime)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', encoding = "UTF-8")
 
 download_fits = False
 delete_fits = False
 replace_zero = True
+clear_from_minus = True
+clear_with_std = True
 freq = 0
 
 logging.info('Start working...')
@@ -81,44 +81,59 @@ hourly_time_1, hourly_time_2, hourly_time_3 = {}, {}, {}
 hourly_datas = [hourly_data_3, hourly_data_2, hourly_data_1]
 hourly_times = [hourly_time_3, hourly_time_2, hourly_time_1]
 
+colors = plt.cm.jet(np.linspace(0, 1, 3))
+
+if replace_zero:
+    times[0], fluxs[0] = replace_zero_average(times[0], fluxs[0])
+    times[1], fluxs[1] = replace_zero_average(times[1], fluxs[1])
+    times[2], fluxs[2] = replace_zero_average(times[2], fluxs[2])
+
+if clear_from_minus:
+    times[0], fluxs[0] = clear_from_minus_flux(times[0], fluxs[0])
+    times[1], fluxs[1] = clear_from_minus_flux(times[1], fluxs[1])
+    times[2], fluxs[2] = clear_from_minus_flux(times[2], fluxs[2])
+
+if clear_with_std:
+    times[0], fluxs[0] = clear_flux_with_std(times[0], fluxs[0], 0.75)
+    times[1], fluxs[1] = clear_flux_with_std(times[1], fluxs[1], 0.75)
+    times[2], fluxs[2] = clear_flux_with_std(times[2], fluxs[2], 0.75)
+
 for index, flux in enumerate(fluxs):
-    for hour in range(1, 12):
+    for hour in range(0, 12):
         start_time = hour * 3600
         end_time = (hour + 1) * 3600
         mask = (times[index] >= start_time) & (times[index] < end_time)
-        hourly_datas[index][hour] = np.mean(fluxs[index][mask])
-        hourly_times[index][hour] = np.mean(times[index][mask])
+        if len(times[index][mask]) > 512:
+            hourly_datas[index][hour] = np.mean(fluxs[index][mask])
+            hourly_times[index][hour] = np.mean(times[index][mask])
+        else:
+            hourly_datas[index][hour] = np.nan
+            hourly_times[index][hour] = np.nan
 
-colors = plt.cm.jet(np.linspace(0, 1, 3))
+for x in range(0, 12):
+    ax.scatter(hourly_times[0][x], hourly_datas[0][x], s = 40, c='b')
 
-for freq in range(0, 3):
+for x in range(0, 12):
+    ax.scatter(hourly_times[1][x], hourly_datas[1][x], s = 40, c='k')
 
-    if replace_zero:
-        replace_zero_average(data_0306_3[freq][0], data_0306_3[freq])
-        replace_zero_average(data_0306_2[freq][0], data_0306_2[freq])
-        replace_zero_average(data_0306_1[freq][0], data_0306_1[freq])
+ax.scatter(np.mean(times[1]), canada_data_3, s = 70, c='k', marker='X')
 
-    for x in range(1, 12):
-        ax.scatter(hourly_times[0][x], hourly_datas[0][x], s = 40, c='b')
-
-    for x in range(1, 12):
-        ax.scatter(hourly_times[1][x], hourly_datas[1][x], s = 40, c='k')
-
-    ax.scatter(np.mean(times[1]), canada_data_3, s = 40, c='k', marker='X')
-
-    ax.plot(data_0306_3[freq][0], data_0306_3[freq][3], label=f'{freqs_0306[freq]} GHz', color=colors[freq])
-    ax.plot(data_0306_2[freq][0], data_0306_2[freq][3], label=f'{freqs_0306[freq]} GHz', color=colors[freq])
-    ax.plot(data_0306_1[freq][0], data_0306_1[freq][3], label=f'{freqs_0306[freq]} GHz', color=colors[freq])
-    # ax.plot(data_0306[freq][0], data_0306[freq][4], color=colors[freq]) stocks V
+ax.plot(times[0], fluxs[0], label=f'{freqs_0306[freq]} GHz', color=colors[freq])
+ax.plot(times[1], fluxs[1], label=f'{freqs_0306[freq]} GHz', color=colors[freq])
+ax.plot(times[2], fluxs[2], label=f'{freqs_0306[freq]} GHz', color=colors[freq])
+# ax.plot(data_0306[freq][0], data_0306[freq][4], color=colors[freq]) stocks V
 
 
-print(times[0])
-print(times[1])
-print(times[2])
+# print(times[0])
+# print(times[1])
+# print(times[2])
+# plt.scatter(range(len(times[1])), times[1], c = 'g')
+# plt.scatter(range(len(times[2])), times[2], c = 'r')
+# plt.scatter(range(len(times[0])), times[0], c = 'b')
 
 ax.legend()
 ax.set_ylabel('s.f.u.')
-# ax.xaxis.set_major_formatter(FuncFormatter(format_seconds))
+ax.xaxis.set_major_formatter(FuncFormatter(format_seconds))
 ax.set_xlabel('UT')
 ax.grid(True)
 plt.tight_layout()
