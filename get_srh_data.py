@@ -32,6 +32,8 @@ def GetSRH(filename, date_str):
         return
 
     file_url = f'{base_url}/{date_str[0:4]}/{date_str[4:6]}/{filename}'
+    if not os.path.exists('data'):
+        os.makedirs('data')
     if os.path.isfile(f'data/{filename}'):
         os.unlink(f'data/{filename}')
     if not download_file(file_url, f'data/{filename}'):

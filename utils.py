@@ -48,9 +48,7 @@ def clear_flux_with_std(array_time: list, array_data: list, coef: int = 0.75):
     datas = list(array_data)
 
     std = np.std(datas)
-    print(std)
     mean = np.mean(datas)
-    print(mean)
 
     filtered_times = []
     filtered_datas = []
@@ -104,7 +102,6 @@ def make_flux_for_hours(timedelta):
 
     for hour in range(0, 12):
         temp_day_and_time = datetime.datetime.combine(day, datetime.time(hour=hour))
-        print(day)
         start_time = hour * 3600
         end_time = (hour + 1) * 3600
         mask = (time_line >= start_time) & (time_line < end_time)
