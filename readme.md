@@ -1,5 +1,6 @@
 Example of returned data:
 
+```python
 [
     {
         datetime.datetime(2025, 3, 6, 0, 0): nan,
@@ -72,4 +73,4 @@ Example of returned data:
         datetime.datetime(2025, 3, 2, 11, 0): nan,
     },
 ]
-
+```
